@@ -34,4 +34,4 @@ jobs:
           context: ./back
           file:  ./back/Dockerfile
           push: true
-          tags: tecktv/bobapp-back:latest
+          tags: thibaultdanis/bobapp-back:latest
