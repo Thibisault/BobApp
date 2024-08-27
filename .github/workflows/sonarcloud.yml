@@ -1,0 +1,65 @@
+name: SonarCloud
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Désactive les clones superficiels pour une meilleure analyse
+
+      # Configuration de Java
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'zulu'  # Utilisez la distribution Zulu
+
+      # Cacher les packages SonarCloud pour une exécution plus rapide
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      # Cacher les packages Maven pour une exécution plus rapide
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      # Installer Node.js pour les tests front-end
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+
+      # Installer les dépendances Node.js
+      - name: Install dependencies
+        working-directory: front
+        run: npm ci
+
+      # Exécuter les tests front-end et générer un rapport de couverture
+      - name: Run frontend tests and generate coverage report
+        working-directory: front
+        run: npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
+
+      # Construire le projet Java et analyser avec SonarCloud
+      - name: Build and analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Utilisé pour obtenir des informations sur les PR
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # Token d'accès SonarCloud
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Thibisault_BobApp
+        working-directory: ./back
