@@ -26,7 +26,7 @@ jobs:
           context: ./front
           file:  ./front/Dockerfile
           push: true
-          tags: tecktv/bobapp-front:latest
+          tags: thibaultdanis/bobapp-front:latest
 
       - name: Build and Push Docker Image of backend
         uses: docker/build-push-action@v3
