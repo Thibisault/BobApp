@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 17
-          distribution: 'zulu'
+          distribution: 'zulu'  # Utilisez la distribution Zulu
 
       # Cacher les packages SonarCloud pour une exécution plus rapide
       - name: Cache SonarCloud packages
@@ -39,11 +39,6 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-
-      # Exécuter les tests backend et générer le rapport Jacoco
-      - name: Run backend tests and generate Jacoco report
-        run: mvn test jacoco:report
-        working-directory: ./back
 
       # Installer Node.js pour les tests front-end
       - name: Setup Node.js
@@ -62,11 +57,9 @@ jobs:
         run: npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
 
       # Construire le projet Java et analyser avec SonarCloud
-      - name: Build and analyze with SonarCloud
+      - name: Build and analyze
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-          -Dsonar.projectKey=Thibisault_BobApp \
-          -Dsonar.coverage.jacoco.xmlReportPaths=back/target/site/jacoco/jacoco.xml
-        working-directory: ./back
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Utilisé pour obtenir des informations sur les PR
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # Token d'accès SonarCloud
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Thibisault_BobApp
+        working-directory: ./back"
